@@ -8,12 +8,16 @@
  * Author URI: https://goose-media.de
  * License: GPL2
  * Text Domain: wp-bfsg-assist
+
  */
 
 // Verhindert direkten Zugriff
 if (!defined('ABSPATH')) {
     exit;
 }
+
+// Frontend einbinden
+require_once plugin_dir_path(__FILE__) . 'includes/frontend.php';
 
 class WP_BFSG_Assist {
     private static $instance = null;
@@ -171,10 +175,11 @@ class WP_BFSG_Assist {
     }
 
     // Feature-Labels abrufen
-    private function get_feature_labels() {
-        // Je nach aktueller Sprache (aus den Options) die Labels
-        $language = isset($this->options['language']) ? $this->options['language'] : 'de';
-        
+    public static function get_feature_labels() {
+        // Wir greifen über self::get_instance()->options auf die Plugin-Optionen zu
+        $instance = self::get_instance();
+        $language = isset($instance->options['language']) ? $instance->options['language'] : 'de';
+    
         $labels = [
             'de' => [
                 'keyboard_nav' => __('Tastatur-Navigation', 'wp-bfsg-assist'),
@@ -197,14 +202,13 @@ class WP_BFSG_Assist {
                 'highlight_links' => __('Highlight Links & Buttons', 'wp-bfsg-assist')
             ]
         ];
-
+    
         if (array_key_exists($language, $labels)) {
             return $labels[$language];
         }
-        // Fallback, wenn Sprache nicht existiert
+        // Fallback
         return $labels['de'];
     }
-
     // Frontend-Skripte laden
     public function enqueue_scripts() {
         wp_enqueue_style('wp-bfsg-assist-style', plugin_dir_url(__FILE__) . 'css/style.css', [], '1.0.0');
