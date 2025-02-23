@@ -72,10 +72,69 @@
     background: #155a8a;
 }
 
-/* Accessibility Features */
-.high-contrast {
+/* Universeller Kontrastmodus */
+.high-contrast, 
+.high-contrast * {
     background: black !important;
     color: yellow !important;
+    border-color: yellow !important;
+}
+
+.high-contrast a, 
+.high-contrast button, 
+.high-contrast input, 
+.high-contrast textarea, 
+.high-contrast select {
+    background: black !important;
+    color: yellow !important;
+    border: 1px solid yellow !important;
+}
+
+.high-contrast img {
+    filter: invert(80%) contrast(150%) !important;
+    mix-blend-mode: normal !important;
+}
+
+.high-contrast table, 
+.high-contrast th, 
+.high-contrast td {
+    border: 1px solid yellow !important;
+}
+
+/* Hintergrundbilder beibehalten */
+.high-contrast * {
+    background-image: none !important;
+}
+
+.high-contrast body, 
+.high-contrast .has-background, 
+.high-contrast .wp-block-cover, 
+.high-contrast .wp-block-cover__image-background {
+    background-image: inherit !important;
+    background-color: transparent !important;
+    filter: none !important;
+}
+
+.high-contrast .wp-block-cover__image-background {
+    background-blend-mode: normal !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Sicherstellen, dass alle Texte sichtbar sind */
+.high-contrast *:not(a):not(button) {
+    color: yellow !important;
+}
+
+.high-contrast a {
+    color: cyan !important;
+    text-decoration: underline !important;
+}
+
+.high-contrast button {
+    background: yellow !important;
+    color: black !important;
+    font-weight: bold !important;
 }
 
 .invert-colors {
