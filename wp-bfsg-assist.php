@@ -8,7 +8,6 @@
  * Author URI: https://goose-media.de
  * License: GPL2
  * Text Domain: wp-bfsg-assist
- * Domain Path: /languages
  */
 
 // Verhindert direkten Zugriff
