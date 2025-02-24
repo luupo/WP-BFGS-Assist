@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WP-BFSG Assist
  * Description: Ein Plugin zur unterstützenden Verbesserung der Barrierefreiheit gemäß BFSG. Es wird keine Gewähr für die vollständige Einhaltung des Gesetzes übernommen.
- * Version: 1.0.0
- * Author: Luca
+ * Version: 0.8
+ * Author: Luca Lupo
  * Author URI: https://lupo.dev
  * Text Domain: wp-bfsg-assist
  */
@@ -382,7 +382,7 @@ class WP_BFSG_Assist {
         $labels = [
             'de' => [
                 'keyboard_nav' => __('Tastatur-Navigation', 'wp-bfsg-assist'),
-                'disable_animations' => __('Animationen ausschalten', 'wp-bfsg-assist'),
+                'disable_animations' => __('Animationen ausschalten (Alpha)', 'wp-bfsg-assist'),
                 'contrast' => __('Kontrast', 'wp-bfsg-assist'),
                 'increase_text' => __('Text vergrößern', 'wp-bfsg-assist'),  // Changed from 'Textgrößen'
                 'decrease_text' => __('Text verkleinern', 'wp-bfsg-assist'),
@@ -392,7 +392,7 @@ class WP_BFSG_Assist {
             ],
             'en' => [
                 'keyboard_nav' => __('Keyboard Navigation', 'wp-bfsg-assist'),
-                'disable_animations' => __('Disable Animations', 'wp-bfsg-assist'),
+                'disable_animations' => __('Disable Animations (Alpha)', 'wp-bfsg-assist'),
                 'contrast' => __('High Contrast', 'wp-bfsg-assist'),
                 'increase_text' => __('Increase Text Size', 'wp-bfsg-assist'),
                 'decrease_text' => __('Decrease Text Size', 'wp-bfsg-assist'),
