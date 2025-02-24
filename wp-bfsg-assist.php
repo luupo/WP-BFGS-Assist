@@ -61,16 +61,19 @@ class WP_BFSG_Assist {
     public function register_settings() {
         register_setting('wp_bfsg_assist_settings', 'wp_bfsg_assist_options', array($this, 'sanitize_settings'));
 
+        // Get current language
+        $language = isset($this->options['language']) ? $this->options['language'] : 'de';
+
         add_settings_section(
             'wp_bfsg_assist_section',
-            __('Einstellungen', 'wp-bfsg-assist'),
+            $language === 'en' ? 'Settings' : 'Einstellungen',
             null,
             'wp_bfsg_assist_settings'
         );
 
         add_settings_field(
             'wp_bfsg_assist_language',
-            __('Admin-Oberfläche Sprache', 'wp-bfsg-assist'),
+            $language === 'en' ? 'Admin Interface Language' : 'Admin-Oberfläche Sprache',
             array($this, 'language_dropdown_callback'),
             'wp_bfsg_assist_settings',
             'wp_bfsg_assist_section'
@@ -103,7 +106,7 @@ class WP_BFSG_Assist {
         // Font Awesome Option
         add_settings_field(
             'wp_bfsg_assist_use_fontawesome',
-            __('Font Awesome Icon verwenden', 'wp-bfsg-assist'),
+            $language === 'en' ? 'Use Font Awesome Icon' : 'Font Awesome Icon verwenden',
             array($this, 'fontawesome_checkbox_callback'),
             'wp_bfsg_assist_settings',
             'wp_bfsg_assist_section'
@@ -115,16 +118,81 @@ class WP_BFSG_Assist {
         if (!current_user_can('manage_options')) {
             return;
         }
+
+        // Aktiver Tab (default now 'info' instead of 'settings')
+        $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'info';
+        
+        // Get current language
+        $language = isset($this->options['language']) ? $this->options['language'] : 'de';
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('WP-BFSG Assist Einstellungen', 'wp-bfsg-assist'); ?></h1>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields('wp_bfsg_assist_settings');
-                do_settings_sections('wp_bfsg_assist_settings');
-                submit_button();
-                ?>
-            </form>
+            <h1><?php esc_html_e('WP-BFSG Assist', 'wp-bfsg-assist'); ?></h1>
+            
+            <h2 class="nav-tab-wrapper">
+                <a href="?page=wp-bfsg-assist&tab=info" class="nav-tab <?php echo $active_tab == 'info' ? 'nav-tab-active' : ''; ?>">
+                    <?php echo $language === 'en' ? 'Info' : 'Info'; ?>
+                </a>
+                <a href="?page=wp-bfsg-assist&tab=settings" class="nav-tab <?php echo $active_tab == 'settings' ? 'nav-tab-active' : ''; ?>">
+                    <?php echo $language === 'en' ? 'Settings' : 'Einstellungen'; ?>
+                </a>
+            </h2>
+
+            <?php if ($active_tab == 'info'): ?>
+                <div class="wp-bfsg-info-wrapper" style="margin-top: 20px;">
+                    <h2><?php echo $language === 'en' ? 'About WP-BFSG Assist' : 'Über WP-BFSG Assist'; ?></h2>
+                    <div class="wp-bfsg-info-content">
+                        <p><?php esc_html_e('Version: 1.0.0', 'wp-bfsg-assist'); ?></p>
+                        <p><?php echo $language === 'en' 
+                            ? 'WP-BFSG Assist is a plugin to improve accessibility according to BFSG.'
+                            : 'WP-BFSG Assist ist ein Plugin zur Verbesserung der Barrierefreiheit gemäß BFSG.'; ?></p>
+                        
+                        <h3><?php echo $language === 'en' ? 'Features:' : 'Features:'; ?></h3>
+                        <ul style="list-style: disc; margin-left: 20px;">
+                            <li><?php echo $language === 'en' 
+                                ? 'Accessible menu for website visitors'
+                                : 'Barrierefreies Menü für Website-Besucher'; ?></li>
+                            <li><?php echo $language === 'en' 
+                                ? 'Adjustable text sizes'
+                                : 'Anpassbare Textgrößen'; ?></li>
+                            <li><?php echo $language === 'en' 
+                                ? 'High contrast mode'
+                                : 'Kontrast-Modus'; ?></li>
+                            <li><?php echo $language === 'en' 
+                                ? 'Readable fonts'
+                                : 'Lesbare Schriftarten'; ?></li>
+                            <li><?php echo $language === 'en' 
+                                ? 'Keyboard navigation'
+                                : 'Tastatur-Navigation'; ?></li>
+                        </ul>
+
+                        <h3><?php echo $language === 'en' ? 'Support & Donate' : 'Support & Spenden'; ?></h3>
+                        <p><?php echo $language === 'en' 
+                            ? 'For questions or issues contact me:'
+                            : 'Bei Fragen oder Problemen kontaktiert mich:'; ?></p>
+                        <p><a href="https://goose-media.de" target="_blank">Luca Lupo (Goose Media)</a></p>
+                        
+                        <div class="wp-bfsg-donation" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <h4><?php echo $language === 'en' ? 'Support Development' : 'Unterstütze die Entwicklung'; ?></h4>
+                            <p><?php echo $language === 'en' 
+                                ? 'If you like this plugin and want to support its development, I would appreciate a small donation:'
+                                : 'Wenn dir dieses Plugin gefällt und du die Weiterentwicklung unterstützen möchtest, freue ich mich über eine kleine Spende:'; ?></p>
+                            <p style="margin-top: 10px;">
+                                <a href="https://www.paypal.com/paypalme/lucalupo" target="_blank" class="button button-primary">
+                                    <?php echo $language === 'en' ? 'Donate via PayPal' : 'Via PayPal spenden'; ?> ❤️
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php elseif ($active_tab == 'settings'): ?>
+                <form method="post" action="options.php">
+                    <?php
+                    settings_fields('wp_bfsg_assist_settings');
+                    do_settings_sections('wp_bfsg_assist_settings');
+                    submit_button($language === 'en' ? 'Save Settings' : 'Einstellungen speichern');
+                    ?>
+                </form>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -145,10 +213,62 @@ class WP_BFSG_Assist {
     public function language_dropdown_callback() {
         $language = isset($this->options['language']) ? $this->options['language'] : 'de';
         ?>
-        <select name="wp_bfsg_assist_options[language]">
+        <select name="wp_bfsg_assist_options[language]" id="wp_bfsg_language_select" onchange="updateLanguage(this)">
             <option value="de" <?php selected($language, 'de'); ?>>Deutsch</option>
             <option value="en" <?php selected($language, 'en'); ?>>English</option>
         </select>
+        <script>
+        function updateLanguage(select) {
+            // Create and submit a form with the new language setting
+            var form = document.createElement('form');
+            form.method = 'post';
+            form.action = 'options.php';
+            
+            // Add WordPress nonce field
+            var nonce = document.createElement('input');
+            nonce.type = 'hidden';
+            nonce.name = '_wpnonce';
+            nonce.value = '<?php echo wp_create_nonce('wp_bfsg_assist_settings-options'); ?>';
+            form.appendChild(nonce);
+
+            // Add referrer field
+            var referrer = document.createElement('input');
+            referrer.type = 'hidden';
+            referrer.name = '_wp_http_referer';
+            referrer.value = window.location.pathname + window.location.search;
+            form.appendChild(referrer);
+
+            // Add option page field
+            var optionPage = document.createElement('input');
+            optionPage.type = 'hidden';
+            optionPage.name = 'option_page';
+            optionPage.value = 'wp_bfsg_assist_settings';
+            form.appendChild(optionPage);
+
+            // Add language setting
+            var currentOptions = <?php echo json_encode($this->options); ?>;
+            currentOptions.language = select.value;
+            
+            // Add all current options as hidden fields
+            Object.keys(currentOptions).forEach(function(key) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'wp_bfsg_assist_options[' + key + ']';
+                input.value = currentOptions[key];
+                form.appendChild(input);
+            });
+
+            // Add action field
+            var action = document.createElement('input');
+            action.type = 'hidden';
+            action.name = 'action';
+            action.value = 'update';
+            form.appendChild(action);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+        </script>
         <?php
     }
 
@@ -164,34 +284,37 @@ class WP_BFSG_Assist {
     public function sanitize_settings($input) {
         $output = [];
         
-        // Debug logging
-        error_log('Sanitize Input: ' . print_r($input, true));
+        // Get current and new language settings
+        $old_language = isset($this->options['language']) ? $this->options['language'] : 'de';
+        $new_language = in_array($input['language'], ['de', 'en']) ? $input['language'] : 'de';
         
-        // Sprache validieren
-        $output['language'] = in_array($input['language'], ['de', 'en']) ? $input['language'] : 'de';
-        
-        // Font Awesome Option strikt prüfen
-        $output['use_fontawesome'] = 0; // Default auf 0 setzen
-        if (isset($input['use_fontawesome']) && $input['use_fontawesome'] == 1) {
-            $output['use_fontawesome'] = 1;
-        }
-        
-        // Debug logging
-        error_log('Font Awesome setting: ' . $output['use_fontawesome']);
-        
-        // Alle Features verarbeiten
-        $features = $this->get_feature_labels();
-        foreach ($features as $key => $label) {
-            // Checkbox
-            $output['enable_' . $key] = isset($input['enable_' . $key]) ? 1 : 0;
-            // Textbox (wenn leer -> automatischen Text eintragen)
-            if (isset($input['label_' . $key]) && !empty(trim($input['label_' . $key]))) {
-                $output['label_' . $key] = sanitize_text_field($input['label_' . $key]);
-            } else {
-                // Standard automatisch
-                $output['label_' . $key] = esc_html($label);
+        // If language changed, update the labels
+        if ($old_language !== $new_language) {
+            $features = $this->get_feature_labels($new_language);
+            foreach ($features as $key => $label) {
+                // Update labels to new language if they match the default
+                if (isset($this->options['label_' . $key]) && 
+                    $this->options['label_' . $key] === $this->get_feature_labels($old_language)[$key]) {
+                    $input['label_' . $key] = $label;
+                }
             }
         }
+
+        // Rest of sanitization
+        $output['language'] = $new_language;
+        
+        // Font Awesome Option
+        $output['use_fontawesome'] = isset($input['use_fontawesome']) && $input['use_fontawesome'] == 1 ? 1 : 0;
+        
+        // Features verarbeiten
+        $features = $this->get_feature_labels($new_language);
+        foreach ($features as $key => $label) {
+            $output['enable_' . $key] = isset($input['enable_' . $key]) ? 1 : 0;
+            $output['label_' . $key] = isset($input['label_' . $key]) && !empty(trim($input['label_' . $key])) 
+                ? sanitize_text_field($input['label_' . $key]) 
+                : esc_html($label);
+        }
+
         return $output;
     }
 
@@ -206,17 +329,16 @@ class WP_BFSG_Assist {
     }
 
     // Feature-Labels abrufen
-    public static function get_feature_labels() {
-        // Wir greifen über self::get_instance()->options auf die Plugin-Optionen zu
+    public static function get_feature_labels($specific_language = null) {
         $instance = self::get_instance();
-        $language = isset($instance->options['language']) ? $instance->options['language'] : 'de';
+        $language = $specific_language ?? (isset($instance->options['language']) ? $instance->options['language'] : 'de');
     
         $labels = [
             'de' => [
                 'keyboard_nav' => __('Tastatur-Navigation', 'wp-bfsg-assist'),
                 'disable_animations' => __('Animationen ausschalten', 'wp-bfsg-assist'),
                 'contrast' => __('Kontrast', 'wp-bfsg-assist'),
-                'increase_text' => __('Textgrößen', 'wp-bfsg-assist'),
+                'increase_text' => __('Text vergrößern', 'wp-bfsg-assist'),  // Changed from 'Textgrößen'
                 'decrease_text' => __('Text verkleinern', 'wp-bfsg-assist'),
                 'readable_font' => __('Lesbare Schriftart', 'wp-bfsg-assist'),
                 'mark_titles' => __('Titel hervorheben', 'wp-bfsg-assist'),

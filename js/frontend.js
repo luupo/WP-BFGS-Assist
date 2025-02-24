@@ -70,9 +70,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function applyScale(scale) {
         try {
-            // Skaliere alle Text-relevanten Elemente
-            const elements = document.querySelectorAll('body, body *');
+            // Skaliere alle Text-relevanten Elemente, außer das Toolbar
+            const elements = document.querySelectorAll('body, body *:not(.wp-bfsg-toolbar-wrapper):not(.wp-bfsg-toolbar-wrapper *)');
             elements.forEach(element => {
+                // Überspringe Elemente, die zum Toolbar gehören
+                if (element.closest('.wp-bfsg-toolbar-wrapper')) {
+                    return;
+                }
+
                 // Hole den original font-size Wert oder setze 'initial'
                 const originalSize = element.getAttribute('data-original-size') || 
                     window.getComputedStyle(element).fontSize;
