@@ -1,23 +1,17 @@
 <?php
 /**
  * Plugin Name: WP-BFSG Assist
- * Plugin URI: https://github.com/luupo/WP-BFGS-Assist
- * Description: Ein Plugin zur Verbesserung der Barrierefreiheit gemäß BFSG.
+ * Description: Ein Plugin zur unterstützenden Verbesserung der Barrierefreiheit gemäß BFSG. Es wird keine Gewähr für die vollständige Einhaltung des Gesetzes übernommen.
  * Version: 1.0.0
- * Author: Luca Lupo (Goose Media)
- * Author URI: https://goose-media.de
- * License: GPL2
+ * Author: Luca
+ * Author URI: https://lupo.dev
  * Text Domain: wp-bfsg-assist
-
  */
 
 // Verhindert direkten Zugriff
 if (!defined('ABSPATH')) {
     exit;
 }
-
-// Frontend einbinden
-require_once plugin_dir_path(__FILE__) . 'includes/frontend.php';
 
 class WP_BFSG_Assist {
     private static $instance = null;
@@ -30,13 +24,42 @@ class WP_BFSG_Assist {
         return self::$instance;
     }
 
-    private function __construct() {
+    public function __construct() {
+        // Simple options initialization
         $this->options = get_option('wp_bfsg_assist_options', []);
-        // Hooks
+        
+        // Register activation hook
+        register_activation_hook(__FILE__, array($this, 'activate'));
+
+        // Basic hooks
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('wp_footer', array($this, 'render_frontend_buttons'));
+    }
+
+    // Add this new activation method
+    public function activate() {
+        // Only set default options if they don't exist
+        if (!get_option('wp_bfsg_assist_options')) {
+            $default_language = 'de';
+            $default_features = $this->get_feature_labels($default_language);
+            
+            $defaults = [
+                'language' => $default_language,
+                'use_fontawesome' => 0,
+                'button_color' => '#1D73BE'
+            ];
+
+            foreach ($default_features as $key => $label) {
+                $defaults['enable_' . $key] = 1;
+                $defaults['label_' . $key] = $label;
+            }
+
+            update_option('wp_bfsg_assist_options', $defaults);
+        }
     }
 
     // Sprachdateien laden
@@ -66,7 +89,7 @@ class WP_BFSG_Assist {
 
         add_settings_section(
             'wp_bfsg_assist_section',
-            $language === 'en' ? 'Settings' : 'Einstellungen',
+            $language === 'en' ? 'Accessibility Menu Settings' : 'Barriere-Menü Einstellungen',
             null,
             'wp_bfsg_assist_settings'
         );
@@ -111,6 +134,15 @@ class WP_BFSG_Assist {
             'wp_bfsg_assist_settings',
             'wp_bfsg_assist_section'
         );
+
+        // Color Picker für Button
+        add_settings_field(
+            'wp_bfsg_assist_button_color',
+            $language === 'en' ? 'Button Color' : 'Button-Farbe',
+            array($this, 'color_picker_callback'),
+            'wp_bfsg_assist_settings',
+            'wp_bfsg_assist_section'
+        );
     }
 
     // Einstellungsseite rendern
@@ -133,7 +165,7 @@ class WP_BFSG_Assist {
                     <?php echo $language === 'en' ? 'Info' : 'Info'; ?>
                 </a>
                 <a href="?page=wp-bfsg-assist&tab=settings" class="nav-tab <?php echo $active_tab == 'settings' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo $language === 'en' ? 'Settings' : 'Einstellungen'; ?>
+                    <?php echo $language === 'en' ? 'Accessibility Menu' : 'Barriere-Menü'; ?>
                 </a>
             </h2>
 
@@ -143,8 +175,8 @@ class WP_BFSG_Assist {
                     <div class="wp-bfsg-info-content">
                         <p><?php esc_html_e('Version: 1.0.0', 'wp-bfsg-assist'); ?></p>
                         <p><?php echo $language === 'en' 
-                            ? 'WP-BFSG Assist is a plugin to improve accessibility according to BFSG.'
-                            : 'WP-BFSG Assist ist ein Plugin zur Verbesserung der Barrierefreiheit gemäß BFSG.'; ?></p>
+                            ? 'WP-BFSG Assist is a plugin to support improving accessibility according to BFSG. No guarantee is given for full compliance with the law.'
+                            : 'WP-BFSG Assist ist ein Plugin zur unterstützenden Verbesserung der Barrierefreiheit gemäß BFSG. Es wird keine Gewähr für die vollständige Einhaltung des Gesetzes übernommen.'; ?></p>
                         
                         <h3><?php echo $language === 'en' ? 'Features:' : 'Features:'; ?></h3>
                         <ul style="list-style: disc; margin-left: 20px;">
@@ -169,7 +201,7 @@ class WP_BFSG_Assist {
                         <p><?php echo $language === 'en' 
                             ? 'For questions or issues contact me:'
                             : 'Bei Fragen oder Problemen kontaktiert mich:'; ?></p>
-                        <p><a href="https://goose-media.de" target="_blank">Luca Lupo (Goose Media)</a></p>
+                        <p><a href="https://lupo.dev" target="_blank">Luca</a></p>
                         
                         <div class="wp-bfsg-donation" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
                             <h4><?php echo $language === 'en' ? 'Support Development' : 'Unterstütze die Entwicklung'; ?></h4>
@@ -280,6 +312,17 @@ class WP_BFSG_Assist {
         echo '<p class="description">' . __('Aktivieren Sie diese Option, um das Font Awesome Rollstuhl-Icon zu verwenden. Deaktivieren Sie sie, um das Standard-Emoji zu verwenden.', 'wp-bfsg-assist') . '</p>';
     }
 
+    // Color Picker Callback
+    public function color_picker_callback() {
+        $color = isset($this->options['button_color']) ? $this->options['button_color'] : '#1D73BE';
+        ?>
+        <input type="text" 
+               name="wp_bfsg_assist_options[button_color]" 
+               value="<?php echo esc_attr($color); ?>" 
+               class="wp-bfsg-color-picker" />
+        <?php
+    }
+
     // Einstellungen validieren
     public function sanitize_settings($input) {
         $output = [];
@@ -314,6 +357,9 @@ class WP_BFSG_Assist {
                 ? sanitize_text_field($input['label_' . $key]) 
                 : esc_html($label);
         }
+
+        // Sanitize color
+        $output['button_color'] = isset($input['button_color']) ? sanitize_hex_color($input['button_color']) : '#1D73BE';
 
         return $output;
     }
@@ -394,6 +440,107 @@ class WP_BFSG_Assist {
         wp_localize_script('wp-bfsg-assist-script', 'wpBfsgAssist', [
             'useFontAwesome' => !empty($this->options['use_fontawesome'])
         ]);
+
+        // Add custom CSS variables for button colors
+        $button_color = isset($this->options['button_color']) ? $this->options['button_color'] : '#1D73BE';
+        
+        // Calculate darker color for hover (reduce brightness by 20%)
+        $darker_color = $this->adjust_brightness($button_color, -20);
+        
+        $custom_css = "
+            :root {
+                --wp-bfsg-button-color: {$button_color};
+                --wp-bfsg-button-color-hover: {$darker_color};
+            }
+        ";
+        wp_add_inline_style('wp-bfsg-assist-style', $custom_css);
+    }
+
+    // Helper function to adjust color brightness
+    private function adjust_brightness($hex, $percent) {
+        // Remove # if present
+        $hex = ltrim($hex, '#');
+        
+        // Convert to RGB
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+        
+        // Adjust brightness
+        $r = max(0, min(255, $r + ($r * ($percent / 100))));
+        $g = max(0, min(255, $g + ($g * ($percent / 100))));
+        $b = max(0, min(255, $b + ($b * ($percent / 100))));
+        
+        // Convert back to hex
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    public function enqueue_admin_scripts($hook) {
+        if ('toplevel_page_wp-bfsg-assist' !== $hook) {
+            return;
+        }
+        
+        // Add WordPress color picker
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+        
+        // Initialize color picker
+        wp_add_inline_script('wp-color-picker', '
+            jQuery(document).ready(function($) {
+                $(".wp-bfsg-color-picker").wpColorPicker();
+            });
+        ');
+    }
+
+    // Neue Methode: Frontend Buttons rendern
+    public function render_frontend_buttons() {
+        // Get current button color
+        $button_color = isset($this->options['button_color']) ? $this->options['button_color'] : '#1D73BE';
+        $darker_color = $this->adjust_brightness($button_color, -20);
+
+        // Inline styles for dynamic colors
+        $style = "
+            <style>
+                :root {
+                    --wp-bfsg-button-color: {$button_color};
+                    --wp-bfsg-button-color-hover: {$darker_color};
+                }
+            </style>
+        ";
+        echo $style;
+
+        // Falls keine Features aktiv sind, nichts anzeigen
+        $features = $this->get_enabled_features();
+        if (empty($features)) {
+            return;
+        }
+
+        ?>
+        <div id="wp-bfsg-toolbar-container">
+            <button id="wp-bfsg-toggle" class="wp-bfsg-toggle"></button>
+            <div id="wp-bfsg-toolbar" style="display: none;">
+                <?php foreach ($features as $key => $label): ?>
+                    <button class="wp-bfsg-btn" data-feature="<?php echo esc_attr($key); ?>">
+                        <?php echo esc_html($label); ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    // Neue Methode: Aktivierte Features abrufen
+    private function get_enabled_features() {
+        $features = self::get_feature_labels();
+        $enabled = [];
+        
+        foreach ($features as $key => $label) {
+            if (!empty($this->options['enable_' . $key])) {
+                $enabled[$key] = isset($this->options['label_' . $key]) ? $this->options['label_' . $key] : $label;
+            }
+        }
+
+        return $enabled;
     }
 }
 

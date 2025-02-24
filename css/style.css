@@ -1,7 +1,7 @@
 /* WP-BFSG Assist - Accessibility Toolbar */
 
 #wp-bfsg-toggle {
-    background: #1D73BE;
+    background-color: var(--wp-bfsg-button-color) !important;
     color: white;
     border: none;
     padding: 10px;
@@ -25,7 +25,7 @@
 }
 
 #wp-bfsg-toggle:hover {
-    background: #155a8a;
+    background-color: var(--wp-bfsg-button-color-hover) !important;
     right: -100px;
 }
 
@@ -95,7 +95,7 @@
     margin-bottom: 5px;
     border: none;
     cursor: pointer;
-    background: #1D73BE;
+    background-color: var(--wp-bfsg-button-color) !important;
     color: white;
     font-size: 16px;
     border-radius: 5px;
@@ -103,7 +103,7 @@
 }
 
 .wp-bfsg-btn:hover {
-    background: #155a8a;
+    background-color: var(--wp-bfsg-button-color-hover) !important;
 }
 
 /* Barrierefreie Styles */
