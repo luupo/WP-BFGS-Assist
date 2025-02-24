@@ -99,6 +99,15 @@ class WP_BFSG_Assist {
                 array('field' => $key)
             );
         }
+
+        // Font Awesome Option
+        add_settings_field(
+            'wp_bfsg_assist_use_fontawesome',
+            __('Font Awesome Icon verwenden', 'wp-bfsg-assist'),
+            array($this, 'fontawesome_checkbox_callback'),
+            'wp_bfsg_assist_settings',
+            'wp_bfsg_assist_section'
+        );
     }
 
     // Einstellungsseite rendern
@@ -143,11 +152,33 @@ class WP_BFSG_Assist {
         <?php
     }
 
+    // Callback für Font Awesome Checkbox
+    public function fontawesome_checkbox_callback() {
+        // Strikte Prüfung auf 1
+        $checked = (isset($this->options['use_fontawesome']) && $this->options['use_fontawesome'] == 1) ? 'checked' : '';
+        echo '<input type="checkbox" id="wp_bfsg_assist_use_fontawesome" name="wp_bfsg_assist_options[use_fontawesome]" value="1" ' . esc_attr($checked) . '>';
+        echo '<p class="description">' . __('Aktivieren Sie diese Option, um das Font Awesome Rollstuhl-Icon zu verwenden. Deaktivieren Sie sie, um das Standard-Emoji zu verwenden.', 'wp-bfsg-assist') . '</p>';
+    }
+
     // Einstellungen validieren
     public function sanitize_settings($input) {
         $output = [];
+        
+        // Debug logging
+        error_log('Sanitize Input: ' . print_r($input, true));
+        
         // Sprache validieren
         $output['language'] = in_array($input['language'], ['de', 'en']) ? $input['language'] : 'de';
+        
+        // Font Awesome Option strikt prüfen
+        $output['use_fontawesome'] = 0; // Default auf 0 setzen
+        if (isset($input['use_fontawesome']) && $input['use_fontawesome'] == 1) {
+            $output['use_fontawesome'] = 1;
+        }
+        
+        // Debug logging
+        error_log('Font Awesome setting: ' . $output['use_fontawesome']);
+        
         // Alle Features verarbeiten
         $features = $this->get_feature_labels();
         foreach ($features as $key => $label) {
@@ -212,7 +243,35 @@ class WP_BFSG_Assist {
     // Frontend-Skripte laden
     public function enqueue_scripts() {
         wp_enqueue_style('wp-bfsg-assist-style', plugin_dir_url(__FILE__) . 'css/style.css', [], '1.0.0');
-        wp_enqueue_script('wp-bfsg-assist-script', plugin_dir_url(__FILE__) . 'js/script.js', ['jquery'], '1.0.0', true);
+        
+        // Font Awesome handling
+        if (!empty($this->options['use_fontawesome'])) {
+            $fa_path = plugin_dir_path(__FILE__) . 'assets/fontawesome/css/all.min.css';
+            $fa_url = plugin_dir_url(__FILE__) . 'assets/fontawesome/css/all.min.css';
+            
+            if (file_exists($fa_path)) {
+                wp_enqueue_style('fontawesome', $fa_url, [], '5.15.4');
+            } else {
+                // Fallback to CDN if local file doesn't exist
+                wp_enqueue_style('fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css', [], '5.15.4');
+                
+                // Add admin notice if we're in admin area
+                if (is_admin()) {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-warning"><p>';
+                        echo esc_html__('Font Awesome files are missing. Please ensure the assets are properly installed in the plugin directory.', 'wp-bfsg-assist');
+                        echo '</p></div>';
+                    });
+                }
+            }
+        }
+        
+        wp_enqueue_script('wp-bfsg-assist-script', plugin_dir_url(__FILE__) . 'js/frontend.js', ['jquery'], '1.0.0', true);
+        
+        // Icon-Type an Frontend übergeben
+        wp_localize_script('wp-bfsg-assist-script', 'wpBfsgAssist', [
+            'useFontAwesome' => !empty($this->options['use_fontawesome'])
+        ]);
     }
 }
 
